@@ -19,22 +19,16 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import com.example.appterror.R;
-import com.example.appterror.controller.GestorDeAlertas; // Importamos el gestor
-import com.example.appterror.controller.VigilanciaService; // Importamos el servicio
+// Importamos SharedPreferences
+import com.example.appterror.controller.VigilanciaService;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class NoticiasActivity extends AppCompatActivity {
 
-    private int faseActual = 1;
-    private final int TOTAL_FASES = 2;
+    private int faseActual = 1; // Variable para saber qué mostrar
     private ImageView imageNoticiaGrande, imageNoticia1, imageNoticia2, imageNoticia3;
-    private final Handler handlerNoticias = new Handler(Looper.getMainLooper());
-    private Runnable runnableNoticias;
-    private final long TIEMPO_DE_CAMBIO = 30000;
 
-    private GestorDeAlertas gestorDeAlertas; // ¡El gestor vuelve!
-
-    // (Los lanzadores de permisos se quedan igual)
+    // Los lanzadores de permisos no cambian
     private final ActivityResultLauncher<String> requestNotificationPermissionLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
         if (isGranted) verificarPermisoOverlay();
         else Toast.makeText(this, "El permiso de notificaciones es vital.", Toast.LENGTH_LONG).show();
@@ -44,53 +38,43 @@ public class NoticiasActivity extends AppCompatActivity {
         else Toast.makeText(this, "El permiso de superposición es necesario.", Toast.LENGTH_SHORT).show();
     });
 
+    // Archivo: NoticiasActivity.java
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_noticias);
 
-        gestorDeAlertas = new GestorDeAlertas(this); // Creamos la instancia
+        // [INICIO DE LA CORRECCIÓN CLAVE]
+        // Forzamos el reinicio del estado a Fase 1 cada vez que la actividad se crea.
+        // Esto asegura que la experiencia del usuario siempre comience desde el principio.
+        VigilanciaService.guardarFase(this, 1);
+        Log.d("NoticiasActivity", "Estado FORZADO a Fase 1 al crear la actividad.");
+        // [FIN DE LA CORRECCIÓN CLAVE]
 
         imageNoticiaGrande = findViewById(R.id.image_noticia_grande);
         imageNoticia1 = findViewById(R.id.image_noticia_1);
         imageNoticia2 = findViewById(R.id.image_noticia_2);
         imageNoticia3 = findViewById(R.id.image_noticia_3);
 
-        inicializarContadorNoticias();
-        cargarContenidoDeLaFase();
         setupBottomNavigation();
+        verificarPermisosEIniciarServicios(); // Esto iniciará el servicio, que ahora leerá la fase 1.
     }
+
 
     @Override
     protected void onResume() {
         super.onResume();
-        handlerNoticias.postDelayed(runnableNoticias, TIEMPO_DE_CAMBIO);
-        verificarPermisosEIniciarServicios(); // La cadena de arranque
+        // Al volver a la actividad, leemos la fase actual guardada por el servicio
+        this.faseActual = VigilanciaService.getFaseGuardada(this);
+        Log.d("NoticiasActivity", "Actividad resumida. Mostrando contenido para la fase " + this.faseActual);
+        cargarContenidoDeLaFase();
     }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-        handlerNoticias.removeCallbacks(runnableNoticias);
-    }
+    // Ya no necesitamos onPause ni onDestroy para los handlers
+    // tampoco el método inicializarContadorNoticias()
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        detenerCiclos();
-    }
-
-    private void inicializarContadorNoticias() {
-        runnableNoticias = () -> {
-            faseActual = (faseActual % TOTAL_FASES) + 1;
-            cargarContenidoDeLaFase();
-            gestorDeAlertas.detener(); // Detenemos las alarmas anteriores
-            gestorDeAlertas.iniciar(faseActual); // Reinicia las alarmas con la nueva fase
-            handlerNoticias.postDelayed(runnableNoticias, TIEMPO_DE_CAMBIO);
-        };
-    }
-
-    // --- CADENA DE PERMISOS Y ARRANQUE ---
+    // --- LA CADENA DE PERMISOS E INICIO SE SIMPLIFICA ---
     private void verificarPermisosEIniciarServicios() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
             requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
@@ -112,99 +96,85 @@ public class NoticiasActivity extends AppCompatActivity {
             AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
             if (!alarmManager.canScheduleExactAlarms()) {
                 startActivity(new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, Uri.parse("package:" + getPackageName())));
-                Toast.makeText(this, "Activa el permiso de alarmas y vuelve.", Toast.LENGTH_LONG).show();
             } else {
-                iniciarServicios();
+                iniciarElServicio();
             }
         } else {
-            iniciarServicios();
+            iniciarElServicio();
         }
     }
 
-    private void iniciarServicios() {
-        // Usamos un Handler para evitar el crash en Android 12+
-        new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            if (!isFinishing()) {
-                // 1. Inicia el escudo
-                Intent serviceIntent = new Intent(this, VigilanciaService.class);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    startForegroundService(serviceIntent);
-                } else {
-                    startService(serviceIntent);
-                }
-
-                // 2. Inicia el cerebro de las alarmas
-                gestorDeAlertas.iniciar(faseActual);
-                Log.d("NoticiasActivity", "Servicios (escudo y alarmas) iniciados.");
-            }
-        }, 500);
-    }
-
-    private void detenerCiclos() {
-        handlerNoticias.removeCallbacks(runnableNoticias);
-        stopService(new Intent(this, VigilanciaService.class)); // Detiene el escudo
-        if (gestorDeAlertas != null) {
-            gestorDeAlertas.detener(); // Detiene las alarmas
+    private void iniciarElServicio() {
+        // Ahora solo iniciamos el servicio una vez. Él se encargará de todo.
+        Intent serviceIntent = new Intent(this, VigilanciaService.class);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(serviceIntent);
+        } else {
+            startService(serviceIntent);
         }
+        Log.d("NoticiasActivity", "Orden de inicio enviada al VigilanciaService.");
     }
 
-    // ========= INICIO DE LA CORRECCIÓN: MÉTODOS QUE FALTABAN =========
+    // El método detenerCiclos ya no es necesario aquí.
+
+    // ========= LOS MÉTODOS DE LA UI SIGUEN IGUAL =========
 
     private void cargarContenidoDeLaFase() {
+        Log.d("NoticiasActivity", "Cargando contenido visual para la fase: " + faseActual);
+        // Switch para determinar qué imágenes mostrar
         switch (faseActual) {
             case 1:
+                // Carga las imágenes de la Fase 1
                 imageNoticiaGrande.setImageResource(R.drawable.fase1_noticia_grande);
                 imageNoticia1.setImageResource(R.drawable.fase1_noticia_1);
                 imageNoticia2.setImageResource(R.drawable.fase1_noticia_2);
                 imageNoticia3.setImageResource(R.drawable.fase1_noticia_3);
                 break;
+
             case 2:
+                // Carga las imágenes de la Fase 2
                 imageNoticiaGrande.setImageResource(R.drawable.fase2_noticia_grande);
                 imageNoticia1.setImageResource(R.drawable.fase2_noticia_1);
                 imageNoticia2.setImageResource(R.drawable.fase2_noticia_2);
                 imageNoticia3.setImageResource(R.drawable.fase2_noticia_3);
                 break;
+
             default:
-                // Por si acaso, volvemos a la fase 1
+                // Opcional: Cargar imágenes por defecto si la fase es desconocida
+                Log.w("NoticiasActivity", "Fase desconocida: " + faseActual + ". Se cargarán las imágenes de la fase 1.");
                 imageNoticiaGrande.setImageResource(R.drawable.fase1_noticia_grande);
                 imageNoticia1.setImageResource(R.drawable.fase1_noticia_1);
                 imageNoticia2.setImageResource(R.drawable.fase1_noticia_2);
                 imageNoticia3.setImageResource(R.drawable.fase1_noticia_3);
-                faseActual = 1;
                 break;
         }
     }
 
+
     private void setupBottomNavigation() {
+        // Este método no cambia, solo quitamos la llamada a detenerCiclos()
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
         bottomNavigationView.setSelectedItemId(R.id.navigation_noticias);
         bottomNavigationView.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
-            // Evita relanzar la misma actividad
-            if (itemId == R.id.navigation_noticias) {
-                return true;
-            }
+            if (itemId == R.id.navigation_noticias) return true;
 
-            detenerCiclos(); // Detenemos todo antes de salir
+            // Ya no es necesario detener nada, el servicio sigue vivo
             Intent intent = null;
 
-            if (itemId == R.id.navigation_home) {
-                intent = new Intent(getApplicationContext(), MenuActivity.class);
-            } else if (itemId == R.id.navigation_consejos) {
-                intent = new Intent(getApplicationContext(), ConsejosActivity.class);
-            } else if (itemId == R.id.navigation_maps) {
-                intent = new Intent(getApplicationContext(), MapsActivity.class);
-            }
+            if (itemId == R.id.navigation_home) intent = new Intent(getApplicationContext(), MenuActivity.class);
+            else if (itemId == R.id.navigation_consejos) intent = new Intent(getApplicationContext(), ConsejosActivity.class);
+            else if (itemId == R.id.navigation_maps) intent = new Intent(getApplicationContext(), MapsActivity.class);
 
             if (intent != null) {
                 startActivity(intent);
-                finish(); // Cerramos la actividad actual
+                finish();
             }
             return true;
         });
     }
-    // ===============================================================
 }
+
 
 
 

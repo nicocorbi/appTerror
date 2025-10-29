@@ -1,7 +1,6 @@
 // Archivo: MenuActivity.java (Modificado para incluir permisos)
 package com.example.appterror.view;
 
-// --- INICIO DE IMPORTS AÑADIDOS ---
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -14,8 +13,6 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
 import com.example.appterror.controller.VigilanciaService;
-// --- FIN DE IMPORTS AÑADIDOS ---
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
@@ -43,7 +40,7 @@ public class MenuActivity extends AppCompatActivity {
                     verificarPermisoBateriaEIniciarServicio();
                 }
             });
-    // --- FIN DE CÓDIGO AÑADIDO PARA PERMISOS ---
+
 
 
     @Override
