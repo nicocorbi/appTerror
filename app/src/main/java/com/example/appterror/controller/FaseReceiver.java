@@ -9,7 +9,9 @@ import android.util.Log;
 public class FaseReceiver extends BroadcastReceiver {
     private static final int TOTAL_FASES = 2;
 
-    // En FaseReceiver.java
+    // LÍNEA 1 (NUEVA): Definimos un "nombre en clave" para el aviso.
+    public static final String ACTION_FASE_CAMBIADA = "com.example.appterror.FASE_CAMBIADA";
+
     @Override
     public void onReceive(Context context, Intent intent) {
         Log.d("FaseReceiver", "¡Alarma de cambio de fase recibida!");
@@ -20,17 +22,18 @@ public class FaseReceiver extends BroadcastReceiver {
 
         Log.d("FaseReceiver", "CAMBIO DE FASE GLOBAL. Nueva fase: " + nuevaFase);
 
-        // [LA LÓGICA IMPORTANTE ESTÁ AQUÍ]
-        // Reinicia la cadena de alertas para la nueva fase
         GestorDeAlertas gestorDeAlertas = new GestorDeAlertas(context);
-        gestorDeAlertas.detener(); // Detiene las alarmas de la fase vieja
-        gestorDeAlertas.iniciar(nuevaFase); // Inicia las alarmas de la nueva fase
+        gestorDeAlertas.detener();
+        gestorDeAlertas.iniciar(nuevaFase);
 
-        // Vuelve a programar el siguiente cambio de fase
+        // LÍNEA 2 (NUEVA): Enviamos el aviso a todo el sistema con el nombre en clave.
+        Intent broadcastIntent = new Intent(ACTION_FASE_CAMBIADA);
+        context.sendBroadcast(broadcastIntent);
+
         long proximoCambio = System.currentTimeMillis() + VigilanciaService.INTERVALO_FASE;
         VigilanciaService.programarProximoCambioDeFase(context, proximoCambio);
-
     }
 }
+
 
 
