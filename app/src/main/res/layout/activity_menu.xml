@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000"
+    tools:context=".view.MenuActivity">
+
+    <!-- Bandera de España -->
+    <ImageView
+        android:id="@+id/flag_image"
+        android:layout_width="32dp"
+        android:layout_height="24dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginEnd="24dp"
+
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:contentDescription="Bandera de España"/>
+
+    <!-- Saludo "Hi! username" -->
+    <TextView
+        android:id="@+id/userNameMenu"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="64dp"
+        android:textColor="@android:color/white"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/flag_image"
+        tools:text="Hi! username"/>
+
+    <!-- Texto principal "QUE QUIERES EXPLORAR HOY?" -->
+    <TextView
+        android:id="@+id/title_explore"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="24dp"
+        android:text="QUÉ\nQUIERES\nEXPLORAR\nHOY?"
+        android:textColor="@android:color/white"
+        android:textSize="40sp"
+        android:textStyle="bold"
+        android:lineSpacingExtra="6dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/userNameMenu"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <!-- Contenedor para los botones de navegación -->
+    <LinearLayout
+        android:id="@+id/buttons_container"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        app:layout_constraintTop_toBottomOf="@id/title_explore"
+        app:layout_constraintBottom_toTopOf="@id/bottom_navigation"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintVertical_bias="0.3">
+
+        <!-- Botón Puntos Seguros (con icono de contorno) -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_puntos_seguros"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:text="Puntos Seguros"
+            android:textColor="@android:color/darker_gray"
+            app:backgroundTint="#1A1A1A"
+            app:cornerRadius="30dp"
+            app:icon="@drawable/ic_location"
+            app:iconTint="#FF0000"
+            app:iconPadding="16dp"
+            app:strokeColor="#FF0000"
+            app:strokeWidth="2dp"
+            android:gravity="start|center_vertical"
+            android:textAllCaps="false"
+            android:layout_marginBottom="20dp"/>
+
+        <!-- Botón Últimas Noticias (con icono de contorno) -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_ultimas_noticias"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:text="Últimas Noticias"
+            android:textColor="@android:color/darker_gray"
+            app:backgroundTint="#1A1A1A"
+            app:cornerRadius="30dp"
+            app:icon="@drawable/ic_tv"
+            app:iconTint="#00FF00"
+            app:iconPadding="16dp"
+            app:strokeColor="#00FF00"
+            app:strokeWidth="2dp"
+            android:gravity="start|center_vertical"
+            android:textAllCaps="false"
+            android:layout_marginBottom="20dp"/>
+
+        <!-- Botón Consejos (con icono de contorno) -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_consejos"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:text="Consejos"
+            android:textColor="@android:color/darker_gray"
+            app:backgroundTint="#1A1A1A"
+            app:cornerRadius="30dp"
+            app:icon="@drawable/ic_notifications"
+            app:iconTint="#FFC107"
+            app:iconPadding="16dp"
+            app:strokeColor="#FFC107"
+            app:strokeWidth="2dp"
+            android:gravity="start|center_vertical"
+            android:textAllCaps="false"/>
+    </LinearLayout>
+
+    <!-- Barra de navegación inferior CORREGIDA -->
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottom_navigation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:menu="@menu/bottom_nav_menu"
+        app:itemIconTint="@color/bottom_nav_color"
+        app:itemTextColor="@color/bottom_nav_color"
+        app:itemIconSize="28dp"
+        app:labelVisibilityMode="unlabeled"
+        android:background="#000000"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

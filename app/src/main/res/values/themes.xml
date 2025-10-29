@@ -1,0 +1,67 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <!--
+        *** PASO 1: CAMBIO CLAVE AQUÍ ***
+        Cambiamos el "parent" para que herede de un tema SIN ActionBar.
+        En lugar de "...DarkActionBar", ahora es "...NoActionBar".
+    -->
+    <style name="Theme.AppTerror" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Primary brand color. -->
+        <item name="colorPrimary">@color/purple_500</item>
+        <item name="colorPrimaryVariant">@color/purple_700</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <!-- Secondary brand color. -->
+        <item name="colorSecondary">@color/teal_200</item>
+        <item name="colorSecondaryVariant">@color/teal_700</item>
+        <item name="colorOnSecondary">@color/black</item>
+        <!-- Status bar color. -->
+        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+        <!-- Customize your theme here. -->
+    </style>
+    <style name="Widget.App.Button.OutlinedButton.IconOnly"
+        parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="iconPadding">0dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:paddingLeft">12dp</item>
+        <item name="android:paddingRight">12dp</item>
+        <item name="android:minWidth">48dp</item>
+        <item name="android:minHeight">48dp</item>
+    </style>
+        <!-- Base application theme. -->
+        <style name="Base.Theme.AppTerror" parent="Theme.Material3.DayNight.NoActionBar">
+            <!-- Customize your light theme here. -->
+            <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        </style>
+
+        <!-- ========= INICIO DEL NUEVO ESTILO ========= -->
+        <!-- Estilo personalizado para nuestra barra de navegación -->
+        <style name="CustomBottomNavigationView"
+            parent="Widget.MaterialComponents.BottomNavigationView">
+            <item name="android:background">#000000</item> <!-- Fondo negro -->
+            <item name="itemIconTint">@color/bottom_nav_color
+            </item> <!-- Selector de color (rojo/blanco) -->
+            <item name="itemTextColor">@color/bottom_nav_color
+            </item> <!-- Mismo selector para el texto -->
+            <item name="itemIconSize">28dp</item> <!-- Tamaño de los iconos -->
+            <item name="labelVisibilityMode">unlabeled</item> <!-- Oculta los títulos -->
+            <item name="menu">@menu/bottom_nav_menu
+            </item> <!-- Asigna el menú por defecto -->
+        </style>
+
+    <!--
+        *** PASO 2: YA NO NECESITAS ESTO ***
+        Como el tema principal ya no tiene barra, este estilo secundario es redundante.
+        Lo puedes borrar para mantener tu código limpio.
+    -->
+    <!--
+    <style name="Theme.AppTerror.NoActionBar" parent="Theme.AppTerror">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+    -->
+
+
+
+        <!-- <style name="Theme.AppTerror" parent="Base.Theme.AppTerror" /> -->
+</resources>
