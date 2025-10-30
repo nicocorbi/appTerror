@@ -1,60 +1,52 @@
-// Archivo: MenuActivity.java (Modificado para incluir permisos)
+// Archivo: MenuActivity.java (VERSIÓN CORREGIDA)
 package com.example.appterror.view;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.PowerManager;
 import android.provider.Settings;
+import android.util.Log;
+import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
-import androidx.core.content.ContextCompat;
-import com.example.appterror.controller.VigilanciaService;
-import android.content.Intent;
-import android.os.Bundle;
-import android.widget.Button;
-import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import com.example.appterror.R;
+import com.example.appterror.controller.VigilanciaService;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MenuActivity extends AppCompatActivity {
 
     private TextView userNameMenuTextView;
     private Button buttonPuntosSeguros, buttonUltimasNoticias, buttonConsejos;
+    private Button buttonForzarAlerta, buttonCambiarFase;
 
-    // --- INICIO DE CÓDIGO AÑADIDO PARA PERMISOS ---
     private final ActivityResultLauncher<String> requestPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
                 if (isGranted) {
-                    // El usuario concedió el permiso de notificaciones. Ahora verificamos la batería.
                     verificarPermisoBateriaEIniciarServicio();
                 } else {
-                    // El usuario denegó el permiso. Informamos que la funcionalidad estará limitada.
-                    Toast.makeText(this, "Las notificaciones de alerta no funcionarán sin este permiso.", Toast.LENGTH_LONG).show();
-                    // Aún así, intentamos verificar la batería e iniciar el servicio.
+                    Toast.makeText(this, "Las notificaciones no funcionarán sin este permiso.", Toast.LENGTH_LONG).show();
                     verificarPermisoBateriaEIniciarServicio();
                 }
             });
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_menu);
 
-        // --- INICIO DE LLAMADA A LA LÓGICA DE PERMISOS ---
-        // Justo al crear la actividad, antes de configurar la UI, iniciamos la verificación.
         solicitarPermisoDeNotificaciones();
-        // --- FIN DE LLAMADA A LA LÓGICA DE PERMISOS ---
 
-
-        // --- CÓDIGO PARA MOSTRAR EL NOMBRE DE USUARIO (SIN CAMBIOS) ---
         userNameMenuTextView = findViewById(R.id.userNameMenu);
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
@@ -66,68 +58,108 @@ public class MenuActivity extends AppCompatActivity {
             }
         }
 
-        // --- LÓGICA PARA LOS NUEVOS BOTONES (SIN CAMBIOS) ---
         buttonPuntosSeguros = findViewById(R.id.button_puntos_seguros);
         buttonUltimasNoticias = findViewById(R.id.button_ultimas_noticias);
         buttonConsejos = findViewById(R.id.button_consejos);
 
-        buttonPuntosSeguros.setOnClickListener(v -> {
-            startActivity(new Intent(MenuActivity.this, MapsActivity.class));
+        buttonPuntosSeguros.setOnClickListener(v -> startActivity(new Intent(MenuActivity.this, MapsActivity.class)));
+        buttonUltimasNoticias.setOnClickListener(v -> startActivity(new Intent(MenuActivity.this, NoticiasActivity.class)));
+        buttonConsejos.setOnClickListener(v -> startActivity(new Intent(MenuActivity.this, ConsejosActivity.class)));
+
+        // --- LÓGICA PARA BOTONES DE DESARROLLADOR ---
+        buttonForzarAlerta = findViewById(R.id.button_dev_forzar_alerta);
+        buttonCambiarFase = findViewById(R.id.button_dev_cambiar_fase);
+
+        buttonForzarAlerta.setOnClickListener(v -> {
+            Log.d("MenuActivity_Dev", "Botón 'Forzar Alerta' pulsado.");
+            forzarAlertaAhora();
+            Toast.makeText(this, "Alerta manual generada.", Toast.LENGTH_SHORT).show();
         });
 
-        buttonUltimasNoticias.setOnClickListener(v -> {
-            startActivity(new Intent(MenuActivity.this, NoticiasActivity.class));
+        // [CORRECCIÓN CLAVE]: El botón solo cambia la fase y te mantiene en la pantalla actual.
+        buttonCambiarFase.setOnClickListener(v -> {
+            Log.d("MenuActivity_Dev", "Botón 'Cambiar Fase' pulsado.");
+            forzarCambioDeFase();
+            Toast.makeText(this, "Fase cambiada en segundo plano.", Toast.LENGTH_SHORT).show();
         });
 
-        buttonConsejos.setOnClickListener(v -> {
-            startActivity(new Intent(MenuActivity.this, ConsejosActivity.class));
-        });
+        setupBottomNavigation();
+    }
 
-        // --- CÓDIGO DE NAVEGACIÓN INFERIOR (SIN CAMBIOS) ---
+    // Archivo: MenuActivity.java
+
+    // --- [REEMPLAZO DEL MÉTODO] ---
+    /**
+     * Lanza una notificación de alerta inmediatamente usando los mensajes reales del GestorDeAlertas.
+     */
+    private void forzarAlertaAhora() {
+        // 1. Obtenemos la fase actual, como antes.
+        int faseActual = VigilanciaService.getFaseGuardada(this);
+
+        // 2. Creamos una instancia del GestorDeAlertas.
+        //    Es necesario usar el nombre completo del paquete si hay ambigüedad.
+        com.example.appterror.controller.GestorDeAlertas gestor = new com.example.appterror.controller.GestorDeAlertas(this);
+
+        // 3. ¡LA MAGIA! Usamos el nuevo método para obtener la lista de mensajes REALES.
+        java.util.List<String> mensajesReales = gestor.getMensajesPorFase(faseActual);
+
+        // 4. Preparamos y enviamos el broadcast al AlertaReceiver con los mensajes correctos.
+        Intent intentAlerta = new Intent(this, com.example.appterror.controller.AlertaReceiver.class);
+        intentAlerta.putExtra("faseActual", faseActual);
+        intentAlerta.putStringArrayListExtra("mensajes", new java.util.ArrayList<>(mensajesReales));
+        sendBroadcast(intentAlerta);
+
+        Log.d("MenuActivity_Dev", "Alerta manual forzada para la fase " + faseActual + " con mensajes reales.");
+    }
+
+
+    private void forzarCambioDeFase() {
+        Intent intentFase = new Intent(this, com.example.appterror.controller.FaseReceiver.class);
+        sendBroadcast(intentFase);
+    }
+
+    // ... (El resto de métodos de la clase: setupBottomNavigation, permisos, etc., permanecen igual)
+    // Se incluyen aquí para que sea el script completo.
+
+    private void setupBottomNavigation() {
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
         bottomNavigationView.setSelectedItemId(R.id.navigation_home);
         bottomNavigationView.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
-
-            if (itemId == R.id.navigation_consejos) {
-                startActivity(new Intent(getApplicationContext(), ConsejosActivity.class));
-                overridePendingTransition(0, 0);
-                finish();
-                return true;
-            } else if (itemId == R.id.navigation_noticias) {
-                startActivity(new Intent(getApplicationContext(), NoticiasActivity.class));
-                overridePendingTransition(0, 0);
-                finish();
-                return true;
-            } else if (itemId == R.id.navigation_maps) {
-                startActivity(new Intent(getApplicationContext(), MapsActivity.class));
-                overridePendingTransition(0, 0);
-                finish();
-                return true;
-            } else if (itemId == R.id.navigation_home) {
+            if (itemId == R.id.navigation_home) {
                 return true;
             }
-            return false;
+            Intent intent = null;
+            if (itemId == R.id.navigation_consejos) {
+                intent = new Intent(getApplicationContext(), ConsejosActivity.class);
+            } else if (itemId == R.id.navigation_noticias) {
+                intent = new Intent(getApplicationContext(), NoticiasActivity.class);
+            } else if (itemId == R.id.navigation_maps) {
+                intent = new Intent(getApplicationContext(), MapsActivity.class);
+            }
+            if (intent != null) {
+                startActivity(intent);
+                overridePendingTransition(0, 0);
+                finish();
+            }
+            return true;
         });
     }
 
-    // --- INICIO DE MÉTODOS AÑADIDOS PARA GESTIONAR PERMISOS E INICIAR SERVICIO ---
     private void solicitarPermisoDeNotificaciones() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
-                    PackageManager.PERMISSION_GRANTED) {
-                verificarPermisoBateriaEIniciarServicio();
-            } else {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
                 new AlertDialog.Builder(this)
                         .setTitle("Permiso de Notificaciones")
-                        .setMessage("Esta aplicación necesita enviar notificaciones para alertarte sobre actividad anómala, incluso si está cerrada. Por favor, concede el permiso.")
-                        .setPositiveButton("Aceptar", (dialog, which) ->
-                                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS))
+                        .setMessage("Esta aplicación necesita enviar notificaciones para alertarte. Por favor, concede el permiso.")
+                        .setPositiveButton("Aceptar", (dialog, which) -> requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS))
                         .setNegativeButton("Cancelar", (dialog, which) -> {
                             Toast.makeText(this, "Advertencia: Las alertas no funcionarán.", Toast.LENGTH_SHORT).show();
                             verificarPermisoBateriaEIniciarServicio();
                         })
                         .show();
+            } else {
+                verificarPermisoBateriaEIniciarServicio();
             }
         } else {
             verificarPermisoBateriaEIniciarServicio();
@@ -138,18 +170,17 @@ public class MenuActivity extends AppCompatActivity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             String packageName = getPackageName();
             PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
-
             if (!pm.isIgnoringBatteryOptimizations(packageName)) {
                 new AlertDialog.Builder(this)
                         .setTitle("Permiso Adicional Requerido")
-                        .setMessage("Para garantizar que las alertas funcionen en todo momento, es necesario desactivar la optimización de batería para esta app. ¿Desea ir a la configuración ahora?")
+                        .setMessage("Para garantizar que las alertas funcionen siempre, desactiva la optimización de batería para esta app.")
                         .setPositiveButton("Ir a Ajustes", (dialog, which) -> {
                             Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
                             intent.setData(Uri.parse("package:" + packageName));
                             startActivity(intent);
                         })
                         .setNegativeButton("Cancelar", (dialog, which) -> {
-                            Toast.makeText(this, "Advertencia: Las alertas pueden no funcionar correctamente en segundo plano.", Toast.LENGTH_LONG).show();
+                            Toast.makeText(this, "Advertencia: Las alertas pueden no funcionar en segundo plano.", Toast.LENGTH_LONG).show();
                             iniciarMiServicio();
                         })
                         .show();
@@ -163,16 +194,14 @@ public class MenuActivity extends AppCompatActivity {
 
     private void iniciarMiServicio() {
         Intent serviceIntent = new Intent(this, VigilanciaService.class);
-        serviceIntent.putExtra("faseActual", 1);
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(serviceIntent);
         } else {
             startService(serviceIntent);
         }
     }
-    // --- FIN DE MÉTODOS AÑADIDOS ---
 }
+
 
 
 

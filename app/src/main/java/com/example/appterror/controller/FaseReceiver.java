@@ -1,4 +1,4 @@
-// Archivo: FaseReceiver.java (NUEVO)
+// Archivo: FaseReceiver.java (VERSIÓN CORREGIDA)
 package com.example.appterror.controller;
 
 import android.content.BroadcastReceiver;
@@ -7,9 +7,8 @@ import android.content.Intent;
 import android.util.Log;
 
 public class FaseReceiver extends BroadcastReceiver {
-    private static final int TOTAL_FASES = 2;
+    private static final int TOTAL_FASES = 4;
 
-    // LÍNEA 1 (NUEVA): Definimos un "nombre en clave" para el aviso.
     public static final String ACTION_FASE_CAMBIADA = "com.example.appterror.FASE_CAMBIADA";
 
     @Override
@@ -26,14 +25,17 @@ public class FaseReceiver extends BroadcastReceiver {
         gestorDeAlertas.detener();
         gestorDeAlertas.iniciar(nuevaFase);
 
-        // LÍNEA 2 (NUEVA): Enviamos el aviso a todo el sistema con el nombre en clave.
+        // [CORRECCIÓN CLAVE]: Enviamos el aviso, INCLUYENDO la nueva fase como dato.
         Intent broadcastIntent = new Intent(ACTION_FASE_CAMBIADA);
+        broadcastIntent.putExtra("nuevaFase", nuevaFase); // <-- Dato extra añadido
         context.sendBroadcast(broadcastIntent);
+        Log.d("FaseReceiver", "Broadcast ACTION_FASE_CAMBIADA enviado con la nueva fase: " + nuevaFase);
 
         long proximoCambio = System.currentTimeMillis() + VigilanciaService.INTERVALO_FASE;
         VigilanciaService.programarProximoCambioDeFase(context, proximoCambio);
     }
 }
+
 
 
 

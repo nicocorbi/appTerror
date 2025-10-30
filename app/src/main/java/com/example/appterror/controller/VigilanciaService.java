@@ -22,7 +22,7 @@ import com.example.appterror.R;
 public class VigilanciaService extends Service {
 
     public static final String CANAL_SERVICIO_ID = "CanalDeVigilancia";
-    public static final long INTERVALO_FASE = 30000; // 30 segundos
+    public static final long INTERVALO_FASE = 90 * 60 * 1000L;
     private static final int REQUEST_CODE_FASE = 2002;
 
     private GestorDeAlertas gestorDeAlertas;

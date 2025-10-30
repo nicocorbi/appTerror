@@ -1,11 +1,14 @@
-// Archivo: MapsActivity.java (Versión final con centrado en la ubicación del usuario)
+// Archivo: MapsActivity.java (VERSIÓN CON OPENSTREETMAP)
 package com.example.appterror.view;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.location.Location; // Importante: importar android.location.Location
+import android.location.Location;import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -16,129 +19,183 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
 import com.example.appterror.R;
-// Importaciones necesarias para obtener la ubicación
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.tasks.Task;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
-public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
+import org.osmdroid.config.Configuration;
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
+import org.osmdroid.util.GeoPoint;
+import org.osmdroid.views.MapView;
+import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
+import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
-    private GoogleMap mMap;
-    // 1. Declara el cliente para obtener la ubicación
-    private FusedLocationProviderClient fusedLocationProviderClient;
-    private final LatLng defaultLocation = new LatLng(40.416775, -3.703790); // Ubicación por defecto (Madrid)
-    private static final float DEFAULT_ZOOM = 15f;
+import java.util.Map;
 
-    private ActivityResultLauncher<String> requestPermissionLauncher =
-            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+public class MapsActivity extends AppCompatActivity implements LocationListener {
+
+    private MapView map = null;
+    private MyLocationNewOverlay mLocationOverlay;
+    private LocationManager locationManager;
+
+    private static final String TAG = "MapsActivity_OSM";
+    private static final float DEFAULT_ZOOM = 16.0f;
+
+    // Lanzador para solicitar permisos de ubicación
+    private final ActivityResultLauncher<String[]> requestPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), permissions -> {
+                boolean isGranted = false;
+                for (Map.Entry<String, Boolean> entry : permissions.entrySet()) {
+                    if (entry.getValue()) {
+                        isGranted = true;
+                        break;
+                    }
+                }
                 if (isGranted) {
-                    activarMiUbicacion();
+                    Log.d(TAG, "Permiso de ubicación concedido.");
+                    setupMapAndLocation(); // Si se conceden, configuramos el mapa y la ubicación
                 } else {
-                    Toast.makeText(this, "Permiso denegado. Mostrando ubicación por defecto.", Toast.LENGTH_LONG).show();
-                    // Si el permiso es denegado, movemos la cámara a la ubicación por defecto
-                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(defaultLocation, DEFAULT_ZOOM));
+                    Log.d(TAG, "Permiso de ubicación denegado.");
+                    Toast.makeText(this, "El permiso de ubicación es necesario para mostrar tu posición.", Toast.LENGTH_LONG).show();
                 }
             });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // --- IMPORTANTE para osmdroid ---
+        // Esto carga la configuración de osmdroid, incluyendo el 'user agent' para evitar ser bloqueado.
+        Context ctx = getApplicationContext();
+        Configuration.getInstance().load(ctx, PreferenceManager.getDefaultSharedPreferences(ctx));
+        // ---------------------------------
+
         setContentView(R.layout.activity_maps);
 
-        // 2. Inicializa el cliente de ubicación
-        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+        // Inicializamos el mapa desde el layout
+        map = findViewById(R.id.map);
+        map.setTileSource(TileSourceFactory.MAPNIK); // Establece el proveedor de losetas del mapa
 
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map_fragment);
-        if (mapFragment != null) {
-            mapFragment.getMapAsync(this);
-        }
+        // Habilitar controles de zoom
+        map.setMultiTouchControls(true);
 
-        // --- CÓDIGO DE NAVEGACIÓN ---
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+        checkLocationPermissionAndSetupMap();
         setupBottomNavigation();
     }
 
-    @Override
-    public void onMapReady(@NonNull GoogleMap googleMap) {
-        mMap = googleMap;
-        verificarPermisosDeUbicacion();
-    }
+    private void checkLocationPermissionAndSetupMap() {
+        // Lista de permisos que necesitamos
+        String[] permissions = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION};
 
-    private void verificarPermisosDeUbicacion() {
+        // Comprobamos si ya tenemos los permisos
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            activarMiUbicacion();
+            Log.d(TAG, "Permisos ya concedidos. Configurando mapa.");
+            setupMapAndLocation();
         } else {
-            requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION);
+            // Si no, los solicitamos
+            Log.d(TAG, "Solicitando permisos de ubicación.");
+            requestPermissionLauncher.launch(permissions);
         }
     }
 
-    private void activarMiUbicacion() {
-        // Esta comprobación es obligatoria
+    private void setupMapAndLocation() {
+        // Comprobación de seguridad
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return;
+            return; // Salimos si no tenemos permisos
         }
 
-        mMap.setMyLocationEnabled(true);
-        mMap.getUiSettings().setMyLocationButtonEnabled(true);
+        // Creamos la capa de "Mi Ubicación"
+        this.mLocationOverlay = new MyLocationNewOverlay(new GpsMyLocationProvider(this), map);
+        this.mLocationOverlay.enableMyLocation(); // Habilitamos el seguimiento de la ubicación
+        this.mLocationOverlay.enableFollowLocation(); // Hacemos que el mapa siga al usuario
+        this.mLocationOverlay.setDrawAccuracyEnabled(true); // Dibuja el círculo de precisión
 
-        // 3. LLAMA AL MÉTODO PARA OBTENER LA UBICACIÓN Y MOVER LA CÁMARA
-        obtenerUbicacionYCentrarMapa();
-    }
+        map.getOverlays().add(this.mLocationOverlay);
 
-    private void obtenerUbicacionYCentrarMapa() {
-        // La comprobación del permiso es obligatoria aquí también
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return;
+        // Centramos el mapa en la última ubicación conocida
+        Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        if (lastKnownLocation != null) {
+            GeoPoint startPoint = new GeoPoint(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
+            map.getController().setCenter(startPoint);
+            map.getController().setZoom(DEFAULT_ZOOM);
+        } else {
+            // Si no hay última ubicación, podemos poner una por defecto (ej. Barcelona)
+            GeoPoint defaultPoint = new GeoPoint(41.3851, 2.1734);
+            map.getController().setCenter(defaultPoint);
+            map.getController().setZoom(12.0); // Zoom más alejado
         }
-
-        // Obtiene la última ubicación conocida. Es una tarea asíncrona.
-        Task<Location> locationResult = fusedLocationProviderClient.getLastLocation();
-        locationResult.addOnCompleteListener(this, task -> {
-            if (task.isSuccessful()) {
-                // La tarea fue exitosa. La ubicación puede ser nula si el GPS estaba apagado.
-                Location lastKnownLocation = task.getResult();
-                if (lastKnownLocation != null) {
-                    // 4. Mueve la cámara a la ubicación del usuario
-                    LatLng userLocation = new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
-                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLocation, DEFAULT_ZOOM));
-                } else {
-                    // Si la ubicación es nula, mueve a la ubicación por defecto
-                    Log.d("MapsActivity", "La última ubicación conocida es nula. Usando ubicación por defecto.");
-                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(defaultLocation, DEFAULT_ZOOM));
-                }
-            } else {
-                // La tarea falló. Mueve a la ubicación por defecto.
-                Log.e("MapsActivity", "Excepción al obtener la ubicación.", task.getException());
-                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(defaultLocation, DEFAULT_ZOOM));
-            }
-        });
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Reanudamos la configuración del mapa y la obtención de la ubicación
+        if (map != null) {
+            map.onResume();
+        }
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 10, this);
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // Pausamos la configuración del mapa y la obtención de la ubicación para ahorrar batería
+        if (map != null) {
+            map.onPause();
+        }
+        locationManager.removeUpdates(this);
+    }
+
+    // --- Métodos del LocationListener ---
+
+    @Override
+    public void onLocationChanged(@NonNull Location location) {
+        // Este método se podría usar para actualizar cosas cuando la ubicación cambia,
+        // pero MyLocationNewOverlay ya lo gestiona visualmente.
+    }
+
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {}
+
+    @Override
+    public void onProviderEnabled(@NonNull String provider) {}
+
+    @Override
+    public void onProviderDisabled(@NonNull String provider) {}
+
+
+    /**
+     * Configura la barra de navegación inferior.
+     */
     private void setupBottomNavigation() {
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
         bottomNavigationView.setSelectedItemId(R.id.navigation_maps);
+
         bottomNavigationView.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
-            if (itemId == R.id.navigation_home) {
-                startActivity(new Intent(getApplicationContext(), MenuActivity.class));
-                return true;
-            } else if (itemId == R.id.navigation_consejos) {
-                startActivity(new Intent(getApplicationContext(), ConsejosActivity.class));
-                return true;
-            } else if (itemId == R.id.navigation_noticias) {
-                startActivity(new Intent(getApplicationContext(), NoticiasActivity.class));
-                return true;
-            } else if (itemId == R.id.navigation_maps) {
+            if (itemId == R.id.navigation_maps) {
                 return true;
             }
-            return false;
+
+            Intent intent = null;
+            if (itemId == R.id.navigation_home) {
+                intent = new Intent(getApplicationContext(), MenuActivity.class);
+            } else if (itemId == R.id.navigation_consejos) {
+                intent = new Intent(getApplicationContext(), ConsejosActivity.class);
+            } else if (itemId == R.id.navigation_noticias) {
+                intent = new Intent(getApplicationContext(), NoticiasActivity.class);
+            }
+
+            if (intent != null) {
+                startActivity(intent);
+                overridePendingTransition(0, 0);
+                finish();
+            }
+            return true;
         });
     }
 }
+
 
