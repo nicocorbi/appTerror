@@ -25,9 +25,9 @@ public class FaseReceiver extends BroadcastReceiver {
         gestorDeAlertas.detener();
         gestorDeAlertas.iniciar(nuevaFase);
 
-        // [CORRECCIÓN CLAVE]: Enviamos el aviso, INCLUYENDO la nueva fase como dato.
+        //  Envia el aviso, INCLUYENDO la nueva fase como dato.
         Intent broadcastIntent = new Intent(ACTION_FASE_CAMBIADA);
-        broadcastIntent.putExtra("nuevaFase", nuevaFase); // <-- Dato extra añadido
+        broadcastIntent.putExtra("nuevaFase", nuevaFase);
         context.sendBroadcast(broadcastIntent);
         Log.d("FaseReceiver", "Broadcast ACTION_FASE_CAMBIADA enviado con la nueva fase: " + nuevaFase);
 

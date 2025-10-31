@@ -1,4 +1,4 @@
-// Archivo: NoticiasActivity.java (VERSIÓN CORREGIDA)
+
 package com.example.appterror.view;
 
 import android.Manifest;
@@ -128,7 +128,7 @@ public class NoticiasActivity extends AppCompatActivity {
                 break;
             case 4:
                 imageNoticiaGrande.setImageResource(R.drawable.fase4_noticia_grande);
-                imageNoticia1.setImageResource(R.drawable.fase4_noticia_1);
+                imageNoticia1.setImageResource(R.drawable.fase4_noticia_2);
                 imageNoticia2.setImageResource(R.drawable.fase4_noticia_2);
                 imageNoticia3.setImageResource(R.drawable.fase4_noticia_2);
                 break;
@@ -142,8 +142,6 @@ public class NoticiasActivity extends AppCompatActivity {
         }
     }
 
-    // ... (El resto de métodos de la clase: setupBottomNavigation, permisos, etc., permanecen igual)
-    // Se incluyen aquí para que sea el script completo.
 
     private void setupBottomNavigation() {
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);

@@ -16,13 +16,12 @@ public class ConsejosActivity extends AppCompatActivity {
     private int faseActual = 1;
     private final int TOTAL_FASES = 4; // Ajusta este número al total de fases que tendrás
 
-    // Declaramos los TextViews para los consejos
     private TextView consejo1, consejo2, consejo3, consejo4, consejo5;
 
     // Handler y Runnable para el cambio automático de fase
     private final Handler faseHandler = new Handler(Looper.getMainLooper());
     private Runnable faseRunnable;
-    private final long TIEMPO_DE_CAMBIO = 10000; // 60 segundos en milisegundos
+    private final long TIEMPO_DE_CAMBIO = 10000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,7 +37,7 @@ public class ConsejosActivity extends AppCompatActivity {
 
         // --- LÓGICA DE FASES ---
         inicializarContadorDeFase();
-        cargarContenidoDeLaFase(); // Carga los consejos de la fase inicial
+        cargarContenidoDeLaFase();
 
         // --- CÓDIGO DE NAVEGACIÓN ---
         setupBottomNavigation();
@@ -128,17 +127,17 @@ public class ConsejosActivity extends AppCompatActivity {
             int itemId = item.getItemId();
             if (itemId == R.id.navigation_home) {
                 startActivity(new Intent(getApplicationContext(), MenuActivity.class));
-                finish(); // Cierra esta actividad
+                finish();
                 return true;
             } else if (itemId == R.id.navigation_consejos) {
-                return true; // Ya estamos aquí
+                return true;
             } else if (itemId == R.id.navigation_maps) {
                 startActivity(new Intent(getApplicationContext(), MapsActivity.class));
-                finish(); // Cierra esta actividad
+                finish();
                 return true;
             } else if (itemId == R.id.navigation_noticias) {
                 startActivity(new Intent(getApplicationContext(), NoticiasActivity.class));
-                finish(); // Cierra esta actividad
+                finish();
                 return true;
             }
             return false;

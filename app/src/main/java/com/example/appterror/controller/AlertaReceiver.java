@@ -1,4 +1,3 @@
-// Archivo: AlertaReceiver.java (MODIFICADO)
 package com.example.appterror.controller;
 
 import android.app.Notification;
@@ -9,11 +8,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.util.Log;
-
 import androidx.core.app.NotificationCompat;
-
 import com.example.appterror.R;
-
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -38,7 +34,7 @@ public class AlertaReceiver extends BroadcastReceiver {
         String mensajeNotificacion = mensajes.get(new Random().nextInt(mensajes.size()));
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
-        // Crear canal de notificación (necesario para Android 8.0 y superior)
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
                     CANAL_ALERTAS_ID, "Alertas de la Aplicación", NotificationManager.IMPORTANCE_HIGH
@@ -58,7 +54,7 @@ public class AlertaReceiver extends BroadcastReceiver {
 
         notificationManager.notify(notificationIdCounter++, notification);
 
-        // 2. [LA CLAVE] REPROGRAMAR LA SIGUIENTE ALARMA EN LA CADENA
+        // 2.  REPROGRAMAR LA SIGUIENTE ALARMA EN LA CADENA
         long proximaAlarmaMillis = System.currentTimeMillis() + GestorDeAlertas.INTERVALO_ALERTAS;
         Log.d("AlertaReceiver", "Reprogramando siguiente alerta para la fase " + faseActual);
         GestorDeAlertas.programarProximaAlarma(context, faseActual, proximaAlarmaMillis);

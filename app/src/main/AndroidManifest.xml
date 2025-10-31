@@ -10,14 +10,19 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
-    <!-- ========================= OTROS PERMISOS DE TU APP ========================= -->
+    <!-- ========================= PERMISOS PARA MAPS Y RED ========================= -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <!-- Permiso para la caché de osmdroid en versiones antiguas de Android -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
 
+
+    <!-- [CORRECCIÓN 2]: Se añade "usesCleartextTraffic" para permitir peticiones HTTP a la API Overpass -->
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -27,6 +32,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.AppTerror"
+        android:usesCleartextTraffic="true"
         tools:targetApi="31">
 
         <!-- ========================= ACTIVIDADES ========================= -->
@@ -48,17 +54,18 @@
             android:name=".controller.VigilanciaService"
             android:enabled="true"
             android:exported="false"
-            android:foregroundServiceType="dataSync" />
+            android:foregroundServiceType="dataSync|dataSync" />
 
-        <!-- Declaración del Receiver que recibirá las alarmas para mostrar notificaciones. -->
-        <!-- [CORREGIDO] Cambiado "android-enabled" a "android:enabled" -->
         <receiver
             android:name=".controller.AlertaReceiver"
             android:enabled="true"
             android:exported="false" />
 
-        <!-- [IMPORTANTE] El receiver para reiniciar en el arranque se añadirá en el siguiente paso -->
-        <!-- Lo comentamos temporalmente para evitar errores si aún no has creado la clase Java -->
+        <receiver
+            android:name=".controller.FaseReceiver"
+            android:enabled="true"
+            android:exported="false" />
+
         <receiver
             android:name=".controller.ReinicioServicioReceiver"
             android:enabled="true"
@@ -68,20 +75,10 @@
             </intent-filter>
         </receiver>
 
-
-        <!-- ========================= METADATOS ========================= -->
-        <meta-data
-            android:name="com.google.android.geo.API_KEY"
-            android:value="TU_API_KEY_AQUI" />
-        <!-- ... tus otras activities, services, etc ... -->
-
-        <!-- [AÑADIR ESTA LÍNEA] Receiver que se encarga del cambio de fase -->
-        <receiver
-            android:name=".controller.FaseReceiver"
-            android:enabled="true"
-            android:exported="false" />
+        <!-- [CORRECCIÓN 1]: ELIMINADO el bloque de metadatos de la API Key de Google Maps -->
 
     </application>
 </manifest>
+
 
 

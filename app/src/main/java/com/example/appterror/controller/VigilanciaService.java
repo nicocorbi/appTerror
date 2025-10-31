@@ -13,10 +13,8 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
-
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
-
 import com.example.appterror.R;
 
 public class VigilanciaService extends Service {
@@ -43,7 +41,7 @@ public class VigilanciaService extends Service {
         Log.d("VigilanciaService", "Servicio Iniciado.");
         mostrarNotificacionPrimerPlano();
 
-        // [CORRECCIÓN CLAVE]: Forzamos que la fase sea 1 en el PRIMER arranque del servicio.
+
         // Si el servicio ya se estaba ejecutando, esto no tiene efecto negativo.
         // Pero si es la primera vez (después de instalar o borrar datos), asegura Fase 1.
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
@@ -65,8 +63,8 @@ public class VigilanciaService extends Service {
         gestorDeAlertas.iniciar(faseInicial);
         Log.d("VigilanciaService", "Cadena de ALARMAS iniciada INMEDIATAMENTE para la fase " + faseInicial);
 
-        // 2. Programa el PRIMER cambio de fase para que ocurra en 30 segundos.
-        //    El FaseReceiver se encargará de los cambios posteriores.
+
+
         long proximoCambio = System.currentTimeMillis() + INTERVALO_FASE;
         programarProximoCambioDeFase(this, proximoCambio);
         Log.d("VigilanciaService", "PRIMER CAMBIO DE FASE programado para dentro de 30 segundos.");
@@ -112,7 +110,7 @@ public class VigilanciaService extends Service {
         Log.d("VigilanciaService", "Servicio Destruido y cadenas de alarmas detenidas.");
     }
 
-    // --- MÉTODOS DE SOPORTE (SharedPreferences) ---
+
     public static void guardarFase(Context context, int fase) {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         prefs.edit().putInt(KEY_FASE_ACTUAL, fase).apply();

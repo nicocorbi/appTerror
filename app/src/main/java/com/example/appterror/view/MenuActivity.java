@@ -1,4 +1,3 @@
-// Archivo: MenuActivity.java (VERSIÓN CORREGIDA)
 package com.example.appterror.view;
 
 import android.Manifest;
@@ -76,7 +75,7 @@ public class MenuActivity extends AppCompatActivity {
             Toast.makeText(this, "Alerta manual generada.", Toast.LENGTH_SHORT).show();
         });
 
-        // [CORRECCIÓN CLAVE]: El botón solo cambia la fase y te mantiene en la pantalla actual.
+        //  El botón solo cambia la fase y te mantiene en la pantalla actual.
         buttonCambiarFase.setOnClickListener(v -> {
             Log.d("MenuActivity_Dev", "Botón 'Cambiar Fase' pulsado.");
             forzarCambioDeFase();
@@ -86,9 +85,6 @@ public class MenuActivity extends AppCompatActivity {
         setupBottomNavigation();
     }
 
-    // Archivo: MenuActivity.java
-
-    // --- [REEMPLAZO DEL MÉTODO] ---
     /**
      * Lanza una notificación de alerta inmediatamente usando los mensajes reales del GestorDeAlertas.
      */
@@ -100,10 +96,10 @@ public class MenuActivity extends AppCompatActivity {
         //    Es necesario usar el nombre completo del paquete si hay ambigüedad.
         com.example.appterror.controller.GestorDeAlertas gestor = new com.example.appterror.controller.GestorDeAlertas(this);
 
-        // 3. ¡LA MAGIA! Usamos el nuevo método para obtener la lista de mensajes REALES.
+        //Usamos el método para obtener la lista de mensajes REALES.
         java.util.List<String> mensajesReales = gestor.getMensajesPorFase(faseActual);
 
-        // 4. Preparamos y enviamos el broadcast al AlertaReceiver con los mensajes correctos.
+        //  Preparamos y enviamos el broadcast al AlertaReceiver con los mensajes correctos.
         Intent intentAlerta = new Intent(this, com.example.appterror.controller.AlertaReceiver.class);
         intentAlerta.putExtra("faseActual", faseActual);
         intentAlerta.putStringArrayListExtra("mensajes", new java.util.ArrayList<>(mensajesReales));
@@ -118,8 +114,6 @@ public class MenuActivity extends AppCompatActivity {
         sendBroadcast(intentFase);
     }
 
-    // ... (El resto de métodos de la clase: setupBottomNavigation, permisos, etc., permanecen igual)
-    // Se incluyen aquí para que sea el script completo.
 
     private void setupBottomNavigation() {
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
