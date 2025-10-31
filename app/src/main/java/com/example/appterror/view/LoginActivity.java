@@ -36,13 +36,14 @@ public class LoginActivity extends AppCompatActivity {
         userNameEditText = findViewById(R.id.userName);
         passwordEditText = findViewById(R.id.TextPassword);
         startButton = findViewById(R.id.start);
-
+        // Configura el comportamiento del botón "Iniciar Sesión"
         startButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                // Obtén los valores de usuario y contraseña
                 String usuario = userNameEditText.getText().toString().trim();
                 String password = passwordEditText.getText().toString().trim();
-
+                // Verifica que los campos no estén vacíos
                 if (usuario.isEmpty()) {
                     Toast.makeText(LoginActivity.this, "Debes rellenar el campo de usuario", Toast.LENGTH_SHORT).show();
                     userNameEditText.setBackgroundTintList(ColorStateList.valueOf(Color.RED));
@@ -50,7 +51,7 @@ public class LoginActivity extends AppCompatActivity {
                 } else {
                     userNameEditText.setBackgroundTintList(ColorStateList.valueOf(Color.GREEN));
                 }
-
+                // Verifica que los campos no estén vacíos
                 if (password.isEmpty()) {
                     Toast.makeText(LoginActivity.this, "Debes rellenar el campo de contraseña", Toast.LENGTH_SHORT).show();
                     passwordEditText.setBackgroundTintList(ColorStateList.valueOf(Color.RED));
@@ -58,19 +59,19 @@ public class LoginActivity extends AppCompatActivity {
                 } else {
                     passwordEditText.setBackgroundTintList(ColorStateList.valueOf(Color.GREEN));
                 }
-
+                // Verifica que el usuario y la contraseña solo contengan letras y números
                 if (!isAlphanumeric(usuario)) {
                     Toast.makeText(LoginActivity.this, "El usuario solo puede contener letras y números", Toast.LENGTH_SHORT).show();
                     userNameEditText.setBackgroundTintList(ColorStateList.valueOf(Color.RED));
                     return;
                 }
-
+                // Verifica que el usuario y la contraseña solo contengan letras y números
                 if (!isAlphanumeric(password)) {
                     Toast.makeText(LoginActivity.this, "La contraseña solo puede contener letras y números", Toast.LENGTH_SHORT).show();
                     passwordEditText.setBackgroundTintList(ColorStateList.valueOf(Color.RED));
                     return;
                 }
-
+                // Verifica que la contraseña tenga entre 4 y 10 caracteres
                 if (password.length() < 4 || password.length() > 10) {
                     Toast.makeText(LoginActivity.this, "La contraseña debe tener entre 4 y 10 caracteres", Toast.LENGTH_SHORT).show();
                     passwordEditText.setBackgroundTintList(ColorStateList.valueOf(Color.RED));
@@ -81,11 +82,11 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
     }
-
+    // Método para verificar si una cadena contiene solo letras y números
     private boolean isAlphanumeric(String texto) {
         return texto.matches("[a-zA-Z0-9]+");
     }
-
+    // Método para probar el inicio de sesión
     void testLogin(String user, String pass) {
         Toast.makeText(LoginActivity.this, "¡Bienvenido " + user + "!", Toast.LENGTH_SHORT).show();
 

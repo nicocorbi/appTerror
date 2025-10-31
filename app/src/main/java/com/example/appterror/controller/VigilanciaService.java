@@ -28,6 +28,11 @@ public class VigilanciaService extends Service {
     private static final String PREFS_NAME = "EstadoAppTerror";
     private static final String KEY_FASE_ACTUAL = "faseActual";
 
+    /**
+     * Se ejecuta una sola vez, cuando el servicio es creado por primera vez.
+     * Inicializa componentes esenciales como el GestorDeAlertas y crea el canal
+     * de notificación necesario para el servicio en primer plano.
+     */
     @Override
     public void onCreate() {
         super.onCreate();
@@ -53,10 +58,14 @@ public class VigilanciaService extends Service {
 
         // Inicia las cadenas de alarmas con la fase correcta.
         iniciarCadenasDeAlarmas(faseActualGuardada);
-
         return START_STICKY;
     }
-
+    /**
+     * Pone en marcha las dos secuencias de eventos principales del juego:
+     * 1. Llama a GestorDeAlertas para que inicie inmediatamente el ciclo de notificaciones y música.
+     * 2. Programa la primera alarma para el futuro cambio de fase a través de FaseReceiver.
+     * @param faseInicial La fase actual del juego, leída desde SharedPreferences.
+     */
     private void iniciarCadenasDeAlarmas(int faseInicial) {
         // 1. Inicia INMEDIATAMENTE la cadena de alertas con la fase actual.
         //    Esto asegura que desde el segundo cero haya alertas de la fase correcta (Fase 1 al inicio).
@@ -69,7 +78,12 @@ public class VigilanciaService extends Service {
         programarProximoCambioDeFase(this, proximoCambio);
         Log.d("VigilanciaService", "PRIMER CAMBIO DE FASE programado para dentro de 30 segundos.");
     }
-
+    /**
+     * Utiliza el AlarmManager para programar una alarma exacta que activará el FaseReceiver
+     * en un momento específico en el futuro, encargándose así de la progresión de fases del juego.
+     * @param context El contexto de la aplicación.
+     * @param triggerAtMillis El momento exacto (en milisegundos) en que la alarma debe dispararse.
+     */
     public static void programarProximoCambioDeFase(Context context, long triggerAtMillis) {
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         Intent intent = new Intent(context, FaseReceiver.class);
@@ -91,7 +105,11 @@ public class VigilanciaService extends Service {
             alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent);
         }
     }
-
+    /**
+     * Se ejecuta cuando el servicio está siendo destruido por el sistema.
+     * Se encarga de limpiar y detener todas las operaciones en curso, como las alarmas
+     * del GestorDeAlertas y la alarma programada para el cambio de fase.
+     */
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -111,11 +129,19 @@ public class VigilanciaService extends Service {
     }
 
 
+    /**
+     * Guarda la fase actual del juego de forma persistente en SharedPreferences.
+     * Esto permite que el estado del juego se recupere incluso si la aplicación o el dispositivo se reinician.
+     */
     public static void guardarFase(Context context, int fase) {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         prefs.edit().putInt(KEY_FASE_ACTUAL, fase).apply();
     }
-
+    /**
+     * Crea y muestra una notificación persistente que asocia este servicio a un estado
+     * de "primer plano", indicando al sistema operativo que es un proceso importante
+     * y que no debe ser eliminado por falta de memoria.
+     */
     public static int getFaseGuardada(Context context) {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         // Devuelve 1 como valor por defecto si la clave no existe.
@@ -132,6 +158,11 @@ public class VigilanciaService extends Service {
         startForeground(1, notification);
     }
 
+    /**
+     * Crea el canal de notificación necesario en versiones de Android 8.0 (Oreo) o superiores.
+     * Este canal es requerido para poder mostrar cualquier notificación, incluyendo la del
+     * servicio en primer plano.
+     */
     private void crearCanalDeNotificacion() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(

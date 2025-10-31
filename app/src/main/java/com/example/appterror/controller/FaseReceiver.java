@@ -1,4 +1,3 @@
-// Archivo: FaseReceiver.java (VERSIÓN CORREGIDA)
 package com.example.appterror.controller;
 
 import android.content.BroadcastReceiver;
@@ -14,13 +13,13 @@ public class FaseReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         Log.d("FaseReceiver", "¡Alarma de cambio de fase recibida!");
-
+        // Incrementa la fase y la reinicia si llega al final
         int faseActual = VigilanciaService.getFaseGuardada(context);
         int nuevaFase = (faseActual % TOTAL_FASES) + 1;
         VigilanciaService.guardarFase(context, nuevaFase);
 
         Log.d("FaseReceiver", "CAMBIO DE FASE GLOBAL. Nueva fase: " + nuevaFase);
-
+        //  Inicia la cadena de alertas con la nueva fase
         GestorDeAlertas gestorDeAlertas = new GestorDeAlertas(context);
         gestorDeAlertas.detener();
         gestorDeAlertas.iniciar(nuevaFase);

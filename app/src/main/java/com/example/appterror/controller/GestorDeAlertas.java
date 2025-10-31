@@ -23,7 +23,7 @@ public class GestorDeAlertas {
 
     private static final int REQUEST_CODE_ALERTAS = 1001;
     public static final long INTERVALO_ALERTAS = 30 * 60 * 1000L;
-
+    // Listas de strings con los textos de las alertas para cada fase
     private static final List<String> mensajesFase1 = Arrays.asList(
             "El gobierno informa de sucesos inusuales: objetos que se mueven sin explicación.",
             "Vecinos reportan luces intermitentes en el cielo nocturno.",
@@ -44,14 +44,14 @@ public class GestorDeAlertas {
             "ÚLTIMA HORA: te estamos viendo.",
             "AVISO: no podras escapar."
     );
-
+    // Constructor de la clase GestorDeAlertas que recibe el contexto de la aplicación como parámetro y inicializa el AlarmManager.
     public GestorDeAlertas(Context context) {
         this.context = context.getApplicationContext();
         this.alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         // --- [NUEVO] Inicializamos el GestorMusical ---
         this.gestorMusical = new GestorMusical(this.context);
     }
-
+    // Método estático para obtener los mensajes correspondientes a una fase
     public static List<String> getMensajesPorFase(int fase) {
         switch (fase) {
             case 1: return mensajesFase1;
@@ -63,7 +63,7 @@ public class GestorDeAlertas {
                 return mensajesFase1;
         }
     }
-
+    // Método para iniciar el gestor de alertas con la fase actual especificada
     public void iniciar(int faseActual) {
         Log.d(TAG, "Iniciando gestor para la fase " + faseActual);
 
@@ -80,7 +80,7 @@ public class GestorDeAlertas {
         Log.d(TAG, "Programando PRIMERA alarma de notificación para la fase " + faseActual);
         programarProximaAlarma(context, faseActual, System.currentTimeMillis() + INTERVALO_ALERTAS);
     }
-
+    // Método estático para programar la próxima alarma de notificación con la fase actual especificada
     public static void programarProximaAlarma(Context context, int faseActual, long triggerAtMillis) {
         AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         List<String> mensajes = getMensajesPorFase(faseActual);
@@ -108,7 +108,7 @@ public class GestorDeAlertas {
         }
         Log.d(TAG, "Próxima alarma de notificación programada para la fase " + faseActual);
     }
-
+    // Método para detener el gestor de alertas y cancelar todas las alarmas
     public void detener() {
         Log.d(TAG, "Deteniendo todos los procesos del gestor de alertas.");
 

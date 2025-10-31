@@ -18,6 +18,7 @@ public class GestorMusical {
     private final Handler handler = new Handler(Looper.getMainLooper());
     private boolean isRunning = false;
 
+    // Clase interna para el ciclo de reproducción de música en un ciclo
     private final Runnable cicloReproduccion = new Runnable() {
         @Override
         public void run() {
@@ -49,7 +50,7 @@ public class GestorMusical {
         // Ejecuta el ciclo inmediatamente en lugar de esperar.
         handler.post(cicloReproduccion);
     }
-
+    // Método para detener el ciclo de reproducción de música
     public void detener() {
         if (!isRunning) return;
         isRunning = false;
@@ -63,7 +64,7 @@ public class GestorMusical {
         detenerReproduccion(); // Detiene cualquier reproducción en curso
         Log.d(TAG, "Ciclo de música detenido y tareas pendientes canceladas.");
     }
-
+    // Método para iniciar la reproducción de música en un ciclo
     private void iniciarReproduccion() {
         // Detenemos y liberamos cualquier instancia anterior para asegurar un estado limpio.
         detenerReproduccion();
@@ -84,7 +85,7 @@ public class GestorMusical {
             mediaPlayer = null;
         }
     }
-
+    // Método para detener la reproducción y liberar los recursos de MediaPlayer
     private void detenerReproduccion() {
         if (mediaPlayer != null) {
             if (mediaPlayer.isPlaying()) {

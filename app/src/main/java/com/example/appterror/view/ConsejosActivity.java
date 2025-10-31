@@ -22,7 +22,11 @@ public class ConsejosActivity extends AppCompatActivity {
     private final Handler faseHandler = new Handler(Looper.getMainLooper());
     private Runnable faseRunnable;
     private final long TIEMPO_DE_CAMBIO = 10000;
-
+    /**
+     * Se ejecuta al crear la actividad por primera vez. Se encarga de configurar la vista,
+     * inicializar los componentes de la interfaz, preparar la lógica para el cambio de fases
+     * y cargar el contenido inicial.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,9 +46,19 @@ public class ConsejosActivity extends AppCompatActivity {
         // --- CÓDIGO DE NAVEGACIÓN ---
         setupBottomNavigation();
     }
+    /**
+     * Define la tarea que se ejecutará repetidamente para cambiar de fase.
+     * Incrementa el contador de fase, actualiza el contenido de la pantalla llamando a
+     * cargarContenidoDeLaFase(), y se vuelve a programar a sí misma para ejecutarse
+     * después del intervalo de tiempo definido.
+     */
 
     private void inicializarContadorDeFase() {
         faseRunnable = new Runnable() {
+            /**
+             * Contiene la lógica que se ejecuta cada vez que el temporizador (Handler) se activa.
+             * Avanza a la siguiente fase y actualiza la interfaz de usuario.
+             */
             @Override
             public void run() {
                 // Incrementa la fase y la reinicia si llega al final
@@ -59,20 +73,33 @@ public class ConsejosActivity extends AppCompatActivity {
             }
         };
     }
-
+    /**
+     * Se ejecuta cuando la actividad vuelve a ser visible para el usuario.
+     * Inicia (o reanuda) el ciclo de cambio de fases programando la primera ejecución
+     * del `faseRunnable`.
+     */
     @Override
     protected void onResume() {
         super.onResume();
         // Inicia el contador cuando la actividad es visible
         faseHandler.postDelayed(faseRunnable, TIEMPO_DE_CAMBIO);
     }
-
+    /**
+     * Se ejecuta cuando la actividad deja de ser visible para el usuario.
+     * Detiene el ciclo de cambio de fases para evitar que se ejecute en segundo plano
+     * y así ahorrar recursos y batería.
+     */
     @Override
     protected void onPause() {
         super.onPause();
         // Detiene el contador cuando la actividad no es visible para ahorrar recursos
         faseHandler.removeCallbacks(faseRunnable);
     }
+    /**
+     * Actualiza los textos de los TextView en la pantalla según el valor de `faseActual`.
+     * Utiliza una estructura `switch` para seleccionar y asignar los consejos correspondientes
+     * a cada una de las cuatro fases.
+     */
 
     private void cargarContenidoDeLaFase() {
         // Selecciona qué textos mostrar según la fase actual
@@ -119,6 +146,12 @@ public class ConsejosActivity extends AppCompatActivity {
                 break;
         }
     }
+    /**
+     * Configura la barra de navegación inferior (BottomNavigationView).
+     * Establece el ítem seleccionado por defecto y define el comportamiento para cada
+     * clic en los ítems, permitiendo navegar entre las diferentes actividades
+     * (Home, Consejos, Maps, Noticias).
+     */
 
     private void setupBottomNavigation() {
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
